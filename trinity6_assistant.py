@@ -16,55 +16,158 @@ llm = ChatAnthropic(
     temperature=0.7
 )
 
-# Agents
+# ============================================
+# AGENTS
+# ============================================
+
 research_agent = Agent(
-    role="GRC Research Specialist",
-    goal="Research latest GRC and cybersecurity news and summarize key insights",
-    backstory="""You are an expert in GRC frameworks and 
-    cybersecurity compliance with deep knowledge of CIS, 
-    NIST, and ISO 27001. You work for Trinity6, an AI 
-    powered cybersecurity company.""",
+    role="Technology Research Specialist",
+    goal="""Research latest news and insights across 
+    cybersecurity, GRC compliance, artificial 
+    intelligence, and technology trends. Find the 
+    most interesting and relevant updates that 
+    professionals need to know today.""",
+    backstory="""You are an expert researcher with 
+    deep knowledge across cybersecurity, GRC 
+    frameworks, AI developments, and emerging 
+    technology trends. You work for Trinity6, an 
+    AI powered cybersecurity company. You find 
+    the most compelling and relevant insights 
+    that educate and engage technology 
+    professionals.""",
     llm=llm,
     verbose=True
 )
 
 content_agent = Agent(
     role="Content Strategist",
-    goal="Draft engaging LinkedIn posts about GRC and cybersecurity for Trinity6",
+    goal="""Draft engaging LinkedIn posts about 
+    cybersecurity, GRC compliance, AI, and 
+    technology for Trinity6. Create content 
+    that builds Trinity6 as a thought leader 
+    across all these domains.""",
     backstory="""You are a skilled content writer 
-    specializing in cybersecurity and compliance topics 
-    for professional audiences. You create content that 
-    attracts potential clients for Trinity6.""",
+    specializing in cybersecurity, AI, and 
+    technology content for professional audiences. 
+    You create content that attracts potential 
+    clients and builds Trinity6 as the go-to 
+    company for AI powered cybersecurity.""",
     llm=llm,
     verbose=True
 )
 
-# Tasks
+shorts_agent = Agent(
+    role="YouTube Shorts Content Creator",
+    goal="""Create viral engaging YouTube Shorts 
+    scripts about cybersecurity, GRC compliance, 
+    AI, and technology for Trinity6 channel.""",
+    backstory="""You are an expert at creating 
+    viral short form video content that educates 
+    and entertains technology professionals. 
+    You know exactly how to hook viewers in 
+    the first 3 seconds and deliver maximum 
+    value in 60 seconds. You create content 
+    for Trinity6, an AI powered cybersecurity 
+    company building authority in cybersecurity, 
+    GRC, AI, and technology space.""",
+    llm=llm,
+    verbose=True
+)
+
+# ============================================
+# TASKS
+# ============================================
+
 research_task = Task(
-    description="""Research the latest updates and best 
-    practices around CIS benchmarks and GRC compliance 
-    for small and medium businesses. Find the top 3 
-    most important insights that businesses should know 
-    right now.""",
-    expected_output="""A concise summary of 3 key GRC 
-    insights with practical implications for SMB 
-    organizations.""",
+    description="""Research the latest updates across 
+    these four areas today:
+    
+    1. Cybersecurity - latest threats, vulnerabilities, 
+    or security incidents
+    2. GRC Compliance - CIS, NIST, ISO 27001 updates 
+    or compliance trends
+    3. Artificial Intelligence - latest AI developments, 
+    tools, or breakthroughs
+    4. Technology - emerging tech trends affecting 
+    businesses and security
+    
+    Find the top most interesting and relevant 
+    insight from each area. Focus on practical 
+    information that business professionals 
+    and cybersecurity engineers would find 
+    valuable and interesting.""",
+    expected_output="""A structured report with 
+    one key insight from each of the four areas - 
+    Cybersecurity, GRC, AI, and Technology. 
+    Each insight should include what happened, 
+    why it matters, and practical implications.""",
     agent=research_agent
 )
 
 content_task = Task(
-    description="""Using the research provided, draft a 
-    professional and engaging LinkedIn post about GRC 
-    compliance tips for small businesses. The post should 
-    position Trinity6 as an expert in cybersecurity and 
-    GRC automation. Keep it under 200 words.""",
-    expected_output="""A ready to publish LinkedIn post 
-    that is professional, engaging, and positions 
-    Trinity6 as a cybersecurity expert.""",
+    description="""Using the research provided, 
+    draft one professional engaging LinkedIn post 
+    for Trinity6. 
+    
+    Choose the most compelling insight from 
+    the research across cybersecurity, GRC, 
+    AI, or technology. Mix topics across 
+    different days to keep content varied 
+    and interesting.
+    
+    Post requirements:
+    - Under 200 words
+    - Strong opening line that stops scrolling
+    - Valuable insight or tip
+    - Position Trinity6 as intelligent expert
+    - Professional but conversational tone
+    - End with a thought provoking question
+      to drive engagement
+    - Include 5 relevant hashtags""",
+    expected_output="""A ready to publish LinkedIn 
+    post that is professional, engaging, positions 
+    Trinity6 as cybersecurity and AI expert, 
+    under 200 words with hashtags.""",
     agent=content_agent
 )
 
-# Telegram Function
+shorts_task = Task(
+    description="""Using the research provided, 
+    create one highly engaging YouTube Shorts 
+    script for Trinity6. 
+    
+    Choose the single most interesting insight 
+    from the research - could be from cybersecurity, 
+    GRC, AI, or technology. Pick whichever is 
+    most surprising, alarming, or fascinating.
+    
+    Script requirements:
+    - Maximum 60 seconds when read aloud
+    - First 3 seconds must have a powerful hook 
+      that stops scrolling
+    - Deliver one clear valuable insight
+    - Include one practical tip or action
+    - End with call to action to follow Trinity6
+    - Include visual directions in brackets 
+      like [show hacker screen] or [show AI visual]
+    - Conversational and energetic tone
+    - No corporate jargon""",
+    expected_output="""A complete YouTube Shorts 
+    script including:
+    - Hook line for first 3 seconds
+    - Main content with visual directions
+    - Practical tip
+    - Call to action
+    - Estimated read time
+    - Suggested title for the Short
+    - 5 relevant hashtags""",
+    agent=shorts_agent
+)
+
+# ============================================
+# TELEGRAM FUNCTION
+# ============================================
+
 def send_to_telegram(message):
     url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
     payload = {
@@ -79,10 +182,13 @@ def send_to_telegram(message):
         print("Failed to send message")
         print(response.json())
 
-# Run Crew
+# ============================================
+# RUN CREW
+# ============================================
+
 crew = Crew(
-    agents=[research_agent, content_agent],
-    tasks=[research_task, content_task],
+    agents=[research_agent, content_agent, shorts_agent],
+    tasks=[research_task, content_task, shorts_task],
     process=Process.sequential,
     verbose=True
 )
@@ -90,14 +196,22 @@ crew = Crew(
 print("Starting Trinity6 AI Agents...")
 result = crew.kickoff()
 
-message = f"""
-<b>🛡️ Trinity6 Daily Report</b>
+# ============================================
+# SEND TO TELEGRAM
+# ============================================
 
-<b>GRC Research & Content Update</b>
+message = f"""
+<b>🛡️ Trinity6 Daily Content Report</b>
+
+<b>📊 Topics Covered Today</b>
+Cybersecurity · GRC · AI · Technology
+
+<b>📝 Full Report</b>
 
 {result}
 
-<i>Generated by Trinity6 AI Assistant</i>
+<i>✅ Generated by Trinity6 AI Assistant</i>
+<i>🌐 trinity6.com</i>
 """
 
 send_to_telegram(message)
