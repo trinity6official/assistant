@@ -176,7 +176,7 @@ crew = Crew(
 
 print("Starting Trinity6 AI Agents...")
 
-results = crew.kickoff(return_tasks_output=True)
+crew.kickoff()
 
 research_output = str(research_task.output)
 linkedin_output = str(content_task.output)
