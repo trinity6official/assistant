@@ -6,7 +6,7 @@ on:
 jobs:
   run-bot:
     runs-on: ubuntu-latest
-    timeout-minutes: 350
+    timeout-minutes: 120
 
     steps:
     - name: Checkout code
@@ -19,7 +19,7 @@ jobs:
 
     - name: Install dependencies
       run: |
-        pip install langchain-anthropic requests
+        pip install langchain-anthropic langchain requests
 
     - name: Run Trinity6 Bot
       env:
