@@ -19,7 +19,7 @@ jobs:
 
     - name: Install dependencies
       run: |
-        pip install langchain-anthropic langchain requests
+        pip install langchain-anthropic langchain-core requests
 
     - name: Run Trinity6 Bot
       env:
