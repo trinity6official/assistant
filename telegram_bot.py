@@ -5,7 +5,6 @@ import base64
 from langchain_anthropic import ChatAnthropic
 from langchain_core.messages import HumanMessage, SystemMessage
 
-
 ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY")
 TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
 TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID")
@@ -119,27 +118,40 @@ def get_updates(offset=None):
     except:
         return {"ok": False}
 
+def get_latest_offset():
+    """Get latest update ID to ignore all old messages"""
+    try:
+        response = requests.get(
+            f"{BASE_URL}/getUpdates",
+            timeout=10
+        )
+        updates = response.json().get("result", [])
+        if updates:
+            return updates[-1]["update_id"] + 1
+        return None
+    except:
+        return None
+
 def handle_message(text, chat_id, context):
     text = text.strip()
 
-    if text == "/start" or text == "/help":
-        send_message("""Trinity6 AI Assistant is online.
+    if text == "/start":
+        send_message(
+            "Trinity6 AI Assistant is online. Send /help for commands.",
+            chat_id
+        )
 
-I have read your Trinity6 repositories and know your project.
-
-Ask me anything:
-- What have I built so far?
-- What is next in my roadmap?
-- Write code for Phase 2
-- Explain my scanner architecture
-- Write a LinkedIn post about zero trust
-- What should I work on this weekend?
-
-Commands:
-/help - Show this menu
+    elif text == "/help":
+        send_message("""Commands:
 /progress - Your project status
 /next - What to build next
-/status - System status""", chat_id)
+/status - System status
+
+Or just ask me anything:
+- What have I built so far?
+- Write code for Phase 2
+- Write a LinkedIn post about zero trust
+- What should I work on this weekend?""", chat_id)
 
     elif text == "/progress":
         send_message("Reading your repositories...", chat_id)
@@ -164,9 +176,7 @@ AI Assistant: Online
 Website: trinity6.com - Live
 Scanner: Phase 1 Complete
 Daily Reports: 9:30 AM IST
-GitHub: trinity6official
-
-Send /progress for detailed project status.""", chat_id)
+GitHub: trinity6official""", chat_id)
 
     else:
         send_message("Thinking...", chat_id)
@@ -183,7 +193,11 @@ def main():
     context = build_context()
     print("Repository context loaded!")
 
-    # Startup message
+    # Ignore all old messages
+    offset = get_latest_offset()
+    print(f"Starting from offset: {offset}")
+
+    # Single clean startup message
     send_message("""Trinity6 AI Assistant is now online.
 
 I have read your Trinity6 repositories and know your project.
@@ -194,7 +208,6 @@ Send /help for commands or ask me anything.""",
         TELEGRAM_CHAT_ID
     )
 
-    offset = None
     context_refresh = 0
     runtime_minutes = 0
     max_minutes = 110
@@ -218,29 +231,24 @@ Send /help for commands or ask me anything.""",
             context_refresh += 1
             runtime_minutes += 1
 
-            # Refresh repository context every hour
             if context_refresh >= 60:
                 print("Refreshing repository context...")
                 context = build_context()
                 context_refresh = 0
 
-            # Warning message 10 minutes before shutdown
             if runtime_minutes == max_minutes:
                 send_message("""Warning - Trinity6 AI Assistant shutting down in 10 minutes.
 
-To restart the bot go to your GitHub Actions tab and run the Trinity6 Telegram Bot workflow again.
-
-I will send a final message when I shut down.""",
+To restart go to GitHub Actions and run Trinity6 Telegram Bot workflow.""",
                     TELEGRAM_CHAT_ID
                 )
 
-            # Shutdown message
             if runtime_minutes >= max_minutes + 10:
                 send_message("""Trinity6 AI Assistant is now offline.
 
 To restart go to GitHub Actions and run Trinity6 Telegram Bot workflow.
 
-Your daily report will still arrive automatically at 9:30 AM IST.""",
+Your daily report will still arrive at 9:30 AM IST.""",
                     TELEGRAM_CHAT_ID
                 )
                 print("Bot shutting down gracefully.")
