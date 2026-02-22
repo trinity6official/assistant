@@ -182,13 +182,21 @@ def main():
     context = build_context()
     print("Repository context loaded!")
 
-    send_message(
-        "Trinity6 AI Assistant is online. I have read your repositories and know your project. Send /help for commands or ask me anything.",
+    # Startup message
+    send_message("""Trinity6 AI Assistant is now online.
+
+I have read your Trinity6 repositories and know your project.
+I will be active for approximately 2 hours.
+I will notify you 10 minutes before shutting down.
+
+Send /help for commands or ask me anything.""",
         TELEGRAM_CHAT_ID
     )
 
     offset = None
     context_refresh = 0
+    runtime_minutes = 0
+    max_minutes = 110
 
     while True:
         try:
@@ -207,12 +215,37 @@ def main():
                         handle_message(text, chat_id, context)
 
             context_refresh += 1
+            runtime_minutes += 1
+
+            # Refresh repository context every hour
             if context_refresh >= 60:
                 print("Refreshing repository context...")
                 context = build_context()
                 context_refresh = 0
 
-            time.sleep(1)
+            # Warning message 10 minutes before shutdown
+            if runtime_minutes == max_minutes:
+                send_message("""Warning - Trinity6 AI Assistant shutting down in 10 minutes.
+
+To restart the bot go to your GitHub Actions tab and run the Trinity6 Telegram Bot workflow again.
+
+I will send a final message when I shut down.""",
+                    TELEGRAM_CHAT_ID
+                )
+
+            # Shutdown message
+            if runtime_minutes >= max_minutes + 10:
+                send_message("""Trinity6 AI Assistant is now offline.
+
+To restart go to GitHub Actions and run Trinity6 Telegram Bot workflow.
+
+Your daily report will still arrive automatically at 9:30 AM IST.""",
+                    TELEGRAM_CHAT_ID
+                )
+                print("Bot shutting down gracefully.")
+                break
+
+            time.sleep(60)
 
         except Exception as e:
             print(f"Error: {str(e)}")
