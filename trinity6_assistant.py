@@ -3,14 +3,12 @@ import requests
 from crewai import Agent, Task, Crew, Process
 from langchain_anthropic import ChatAnthropic
 
-# API Keys from environment variables
 ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY")
 TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
 TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID")
 
 os.environ["ANTHROPIC_API_KEY"] = ANTHROPIC_API_KEY
 
-# Language Model
 llm = ChatAnthropic(
     model="claude-haiku-4-5-20251001",
     temperature=0.7
@@ -24,52 +22,36 @@ research_agent = Agent(
     role="Technology Research Specialist",
     goal="""Research latest news and insights across 
     cybersecurity, GRC compliance, artificial 
-    intelligence, and technology trends. Find the 
-    most interesting and relevant updates that 
-    professionals need to know today.""",
+    intelligence, and technology trends.""",
     backstory="""You are an expert researcher with 
     deep knowledge across cybersecurity, GRC 
     frameworks, AI developments, and emerging 
     technology trends. You work for Trinity6, an 
-    AI powered cybersecurity company. You find 
-    the most compelling and relevant insights 
-    that educate and engage technology 
-    professionals.""",
+    AI powered cybersecurity company.""",
     llm=llm,
     verbose=True
 )
 
 content_agent = Agent(
-    role="Content Strategist",
-    goal="""Draft engaging LinkedIn posts about 
-    cybersecurity, GRC compliance, AI, and 
-    technology for Trinity6. Create content 
-    that builds Trinity6 as a thought leader 
-    across all these domains.""",
+    role="LinkedIn Content Strategist",
+    goal="""Draft one engaging LinkedIn post about 
+    cybersecurity, GRC compliance, AI, or technology 
+    for Trinity6.""",
     backstory="""You are a skilled content writer 
-    specializing in cybersecurity, AI, and 
-    technology content for professional audiences. 
-    You create content that attracts potential 
-    clients and builds Trinity6 as the go-to 
-    company for AI powered cybersecurity.""",
+    specializing in cybersecurity and technology 
+    content for professional audiences on LinkedIn.""",
     llm=llm,
     verbose=True
 )
 
 shorts_agent = Agent(
-    role="YouTube Shorts Content Creator",
-    goal="""Create viral engaging YouTube Shorts 
-    scripts about cybersecurity, GRC compliance, 
-    AI, and technology for Trinity6 channel.""",
-    backstory="""You are an expert at creating 
-    viral short form video content that educates 
-    and entertains technology professionals. 
-    You know exactly how to hook viewers in 
-    the first 3 seconds and deliver maximum 
-    value in 60 seconds. You create content 
-    for Trinity6, an AI powered cybersecurity 
-    company building authority in cybersecurity, 
-    GRC, AI, and technology space.""",
+    role="YouTube Shorts Creator",
+    goal="""Create one viral YouTube Shorts script 
+    about cybersecurity, GRC, AI, or technology 
+    for Trinity6 channel.""",
+    backstory="""You are an expert at creating viral 
+    short form video content that educates technology 
+    professionals in 60 seconds or less.""",
     llm=llm,
     verbose=True
 )
@@ -82,85 +64,85 @@ research_task = Task(
     description="""Research the latest updates across 
     these four areas today:
     
-    1. Cybersecurity - latest threats, vulnerabilities, 
-    or security incidents
-    2. GRC Compliance - CIS, NIST, ISO 27001 updates 
-    or compliance trends
-    3. Artificial Intelligence - latest AI developments, 
-    tools, or breakthroughs
-    4. Technology - emerging tech trends affecting 
-    businesses and security
+    1. Cybersecurity - latest threats or incidents
+    2. GRC Compliance - CIS, NIST, ISO 27001 updates
+    3. Artificial Intelligence - latest developments
+    4. Technology - emerging trends
     
-    Find the top most interesting and relevant 
-    insight from each area. Focus on practical 
-    information that business professionals 
-    and cybersecurity engineers would find 
-    valuable and interesting.""",
-    expected_output="""A structured report with 
-    one key insight from each of the four areas - 
-    Cybersecurity, GRC, AI, and Technology. 
-    Each insight should include what happened, 
-    why it matters, and practical implications.""",
+    Return ONLY a clean structured report.
+    No markdown symbols. No stars. No hashtags.
+    Use plain text only.
+    
+    Format exactly like this:
+    
+    CYBERSECURITY
+    [One paragraph about latest cybersecurity insight]
+    
+    GRC COMPLIANCE
+    [One paragraph about latest GRC insight]
+    
+    ARTIFICIAL INTELLIGENCE
+    [One paragraph about latest AI insight]
+    
+    TECHNOLOGY
+    [One paragraph about latest technology insight]""",
+    expected_output="""Clean plain text report with 
+    four sections. No markdown. No stars. No symbols.""",
     agent=research_agent
 )
 
 content_task = Task(
-    description="""Using the research provided, 
-    draft one professional engaging LinkedIn post 
-    for Trinity6. 
+    description="""Using the research provided write 
+    one LinkedIn post for Trinity6.
     
-    Choose the most compelling insight from 
-    the research across cybersecurity, GRC, 
-    AI, or technology. Mix topics across 
-    different days to keep content varied 
-    and interesting.
-    
-    Post requirements:
+    Requirements:
     - Under 200 words
-    - Strong opening line that stops scrolling
-    - Valuable insight or tip
-    - Position Trinity6 as intelligent expert
+    - Strong opening line
     - Professional but conversational tone
-    - End with a thought provoking question
-      to drive engagement
-    - Include 5 relevant hashtags""",
-    expected_output="""A ready to publish LinkedIn 
-    post that is professional, engaging, positions 
-    Trinity6 as cybersecurity and AI expert, 
-    under 200 words with hashtags.""",
+    - End with one question to drive engagement
+    - Add 5 hashtags on the last line
+    
+    Return ONLY the LinkedIn post text.
+    No introduction. No explanation.
+    No markdown symbols. No stars.
+    Just the post exactly as it would appear on LinkedIn.
+    Start directly with the first line of the post.""",
+    expected_output="""Ready to publish LinkedIn post 
+    in plain text. No markdown. No stars. No symbols. 
+    Just the post content and hashtags.""",
     agent=content_agent
 )
 
 shorts_task = Task(
-    description="""Using the research provided, 
-    create one highly engaging YouTube Shorts 
-    script for Trinity6. 
+    description="""Using the research provided create 
+    one YouTube Shorts script for Trinity6.
     
-    Choose the single most interesting insight 
-    from the research - could be from cybersecurity, 
-    GRC, AI, or technology. Pick whichever is 
-    most surprising, alarming, or fascinating.
-    
-    Script requirements:
+    Requirements:
     - Maximum 60 seconds when read aloud
-    - First 3 seconds must have a powerful hook 
-      that stops scrolling
-    - Deliver one clear valuable insight
-    - Include one practical tip or action
+    - Powerful hook in first 3 seconds
+    - Visual directions in brackets like [show screen]
     - End with call to action to follow Trinity6
-    - Include visual directions in brackets 
-      like [show hacker screen] or [show AI visual]
-    - Conversational and energetic tone
-    - No corporate jargon""",
-    expected_output="""A complete YouTube Shorts 
-    script including:
-    - Hook line for first 3 seconds
-    - Main content with visual directions
-    - Practical tip
-    - Call to action
-    - Estimated read time
-    - Suggested title for the Short
-    - 5 relevant hashtags""",
+    - Include suggested title
+    - Include 5 hashtags
+    
+    Return ONLY the script.
+    No introduction. No explanation.
+    No markdown symbols. No stars.
+    Format exactly like this:
+    
+    TITLE
+    [Your suggested title here]
+    
+    HOOK
+    [First 3 seconds script]
+    
+    SCRIPT
+    [Full script with visual directions]
+    
+    HASHTAGS
+    [5 hashtags]""",
+    expected_output="""Complete YouTube Shorts script 
+    in plain text. No markdown. No stars.""",
     agent=shorts_agent
 )
 
@@ -177,10 +159,9 @@ def send_to_telegram(message):
     }
     response = requests.post(url, json=payload)
     if response.status_code == 200:
-        print("Message sent to Telegram successfully!")
+        print("Message sent successfully")
     else:
-        print("Failed to send message")
-        print(response.json())
+        print(f"Failed: {response.json()}")
 
 # ============================================
 # RUN CREW
@@ -194,45 +175,41 @@ crew = Crew(
 )
 
 print("Starting Trinity6 AI Agents...")
-result = crew.kickoff()
+
+results = crew.kickoff(return_tasks_output=True)
+
+research_output = str(research_task.output)
+linkedin_output = str(content_task.output)
+shorts_output = str(shorts_task.output)
 
 # ============================================
 # SEND TO TELEGRAM
 # ============================================
 
-# Split output into sections
-output_text = str(result)
+# Message 1 - Research
+message1 = f"""<b>Trinity6 Daily Intelligence Report</b>
+<b>Cybersecurity · GRC · AI · Technology</b>
 
-# Message 1 - Header and Research
-message1 = f"""
-<b>🛡️ Trinity6 Daily Content Report</b>
-<b>📊 Cybersecurity · GRC · AI · Technology</b>
+<b>Research Insights</b>
 
-<b>📰 Research Insights</b>
-{output_text[:1000]}
-"""
+{research_output[:3500]}"""
 
 # Message 2 - LinkedIn Post
-message2 = f"""
-<b>💼 LinkedIn Post - Ready to Publish</b>
+message2 = f"""<b>LinkedIn Post</b>
 
-{output_text[1000:2500]}
-"""
+{linkedin_output[:3500]}"""
 
-# Message 3 - YouTube Shorts Script
-message3 = f"""
-<b>🎬 YouTube Shorts Script - Ready to Film</b>
+# Message 3 - YouTube Shorts
+message3 = f"""<b>YouTube Shorts Script</b>
 
-{output_text[2500:4000]}
+{shorts_output[:3500]}
 
-<i>✅ Generated by Trinity6 AI Assistant</i>
-<i>🌐 trinity6.com</i>
-"""
+Trinity6 AI Assistant
+trinity6.com"""
 
-# Send three separate messages
 send_to_telegram(message1)
 send_to_telegram(message2)
 send_to_telegram(message3)
 
-print("\n=== FINAL OUTPUT ===")
-print(result)
+print("All messages sent!")
+print("\n=== DONE ===")
